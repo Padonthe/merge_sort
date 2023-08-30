@@ -8,15 +8,15 @@ import java.util.Iterator;
 public class ExternalMergeSort {
     public static void main(String[] args) {
     	ArrayList<String> inputFiles = new ArrayList<String>();
-    	SortOrder order = SortOrder.NONE;
+    	SortOrder order = SortOrder.ASCENDING;
     	ValuesType type = ValuesType.NONE;
     	
     	for (String arg : args) {
     		if (arg.equals("-a") && order == SortOrder.NONE) {
     			order = SortOrder.ASCENDING;
     		}
-    		if (arg.equals("-d") && order == SortOrder.NONE) {
-    			order = SortOrder.DESCENDING;
+    		if (args.equals("-d")) {
+    		    order = SortOrder.DESCENDING; // Сортировка по убыванию
     		}
     		if (arg.equals("-i") && type == ValuesType.NONE) {
     			type = ValuesType.INT;
@@ -40,7 +40,7 @@ public class ExternalMergeSort {
 			return;	
     	}
     	
-    	MergeHandler mergeHandler = new MergeHandler(inputFiles, order, type);
+    	MergeHandler mergeHandler = new MergeHandler(inputFiles, SortOrder.ASCENDING, ValuesType.INT);
     	mergeHandler.mergeFiles();
     	System.out.println("Слияние завершено");
     }

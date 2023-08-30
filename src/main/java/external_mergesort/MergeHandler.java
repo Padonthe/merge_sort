@@ -3,6 +3,7 @@ package external_mergesort;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -31,26 +32,29 @@ public class MergeHandler {
     }
 
     public <T extends Comparable<T>> void mergeFiles() {
-        currentValues = new ArrayList<Object>();
+        currentValues = new ArrayList<>();
 
-        for (FileReader reader : readers) {
-            if (reader.hasNext()) {
+        Iterator<FileReader> iter = readers.iterator();
+        while (iter.hasNext()) {
+            FileReader reader = iter.next();
+            if (!reader.hasNext()) {
+                iter.remove();
+            } else {
                 currentValues.add(reader.getNextValue());
             }
         }
 
         while (!readers.isEmpty()) {
-            OutputData outputValue = findNextOutputValueAndIndex(currentValues);
-            int index = outputValue.getIndex();
-
-            if (index < 0) {
-                break; // No more values to merge
+        	OutputData<T> outputValue = findNextOutputValueAndIndex1(currentValues);
+            if (outputValue == null) {
+                break; 
             }
+            int index = outputValue.getIndex();
 
             if (readers.get(index).hasNext()) {
                 FileReader reader = readers.get(index);
                 T nextValue = (T) reader.getNextValue();
-                if (cmp.compare(nextValue, (T) outputValue.getValue())) {
+                if (cmp.<T>compare(nextValue, outputValue.getValue())) {
                     currentValues.set(index, nextValue);
                     writeOutputValue(outputValue.getValue());
                 }
@@ -58,26 +62,34 @@ public class MergeHandler {
                 currentValues.remove(index);
                 readers.remove(index);
                 writeOutputValue(outputValue.getValue());
+                if (index < currentValues.size()) {
+                    currentValues.set(index, readers.get(index).getNextValue());
+                }
             }
         }
     }
 
-    private <T extends Comparable<T>> OutputData<T> findNextOutputValueAndIndex(ArrayList<Object> values) {
-        if (values.isEmpty())
+    private <T> OutputData<T> findNextOutputValueAndIndex(ArrayList<T> currentValues2) {
+		return null;
+	}
+
+    private <T extends Comparable<T>> OutputData<T> findNextOutputValueAndIndex1(List<Object> currentValues2) {
+        if (currentValues2.isEmpty())
             return new OutputData<>(null, -1);
 
-        T minMaxValue = (T) values.get(0);
+        T minMaxValue = (T) currentValues2.get(0);
         int minMaxIndex = 0;
 
-        for (int i = 1; i < values.size(); i++) {
-            if (cmp.compare((T) values.get(i), minMaxValue)) {
-                minMaxValue = (T) values.get(i);
+        for (int i = 1; i < currentValues2.size(); i++) {
+            if (cmp.compare((T) currentValues2.get(i), minMaxValue)) {
+                minMaxValue = (T) currentValues2.get(i);
                 minMaxIndex = i;
             }
         }
 
         return new OutputData<>(minMaxValue, minMaxIndex);
     }
+
 
     private <T> void writeOutputValue(T value) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath, true))) {
